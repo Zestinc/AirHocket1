@@ -50,4 +50,47 @@ public class ShaderHelper {
 
         return shaderObjectId;
     }
+
+    public static int linkProgram(int vertexShaderId, int fragmentShaderId) {
+        final int programObjectId = glCreateProgram();
+
+        if (programObjectId == 0) {
+            if (LoggerConfig.ON) {
+                Log.w(TAG, "Could not create new program");
+            }
+            return 0;
+        }
+
+        glAttachShader(programObjectId, vertexShaderId);
+        glAttachShader(programObjectId, fragmentShaderId);
+
+        glLinkProgram(programObjectId);
+
+        final int[] linkStatus = new int[1];
+        glGetProgramiv(programObjectId, GL_LINK_STATUS, linkStatus, 0);
+
+        if (LoggerConfig.ON) {
+            Log.v(TAG, "Results of linking program:\n" + glGetProgramInfoLog(programObjectId));
+        }
+
+        if (linkStatus[0] == 0) {
+            glDeleteProgram(programObjectId);
+            if (LoggerConfig.ON) {
+                Log.w(TAG, "Linking of program failed.");
+            }
+            return 0;
+        }
+
+        return programObjectId;
+    }
+
+    public static boolean validateProgram(int programObjectId) {
+        glValidateProgram(programObjectId);
+
+        final int[] validateStatus = new int[1];
+        glGetProgramiv(programObjectId, GL_VALIDATE_STATUS, validateStatus, 0);
+        Log.v(TAG, "Results of validating program: " + validateStatus[0] + "\nLog:" + glGetProgramInfoLog(programObjectId));
+
+        return validateStatus[0] != 0;
+    }
 }
