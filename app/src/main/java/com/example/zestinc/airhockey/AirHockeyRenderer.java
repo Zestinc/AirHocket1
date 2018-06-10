@@ -5,10 +5,15 @@ import android.graphics.Shader;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
 
+import com.example.zestinc.airhockey.objects.Mallet;
+import com.example.zestinc.airhockey.objects.Table;
+import com.example.zestinc.airhockey.programs.ColorShaderProgram;
+import com.example.zestinc.airhockey.programs.TextureShaderProgram;
 import com.example.zestinc.airhockey.util.LoggerConfig;
 import com.example.zestinc.airhockey.util.MatrixHelper;
 import com.example.zestinc.airhockey.util.ShaderHelper;
 import com.example.zestinc.airhockey.util.TextResourceReader;
+import com.example.zestinc.airhockey.util.TextureHelper;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -23,79 +28,37 @@ import static android.opengl.Matrix.orthoM;
 import static android.opengl.Matrix.rotateM;
 import static android.opengl.Matrix.setIdentityM;
 import static android.opengl.Matrix.translateM;
+import static com.example.zestinc.airhockey.Constants.BYTES_PER_FLOAT;
 
 public class AirHockeyRenderer implements GLSurfaceView.Renderer{
-    private static final String U_MATRIX = "u_Matrix";
-    private static final String A_POSITION = "a_Position";
-    private static final int POSITION_COMPONENT_COUNT = 2;
-    private static final int BYTES_PER_FLOAT = 4;
-    private static final String A_COLOR = "a_Color";
-    private static final int COLOR_COMPONENT_COUNT = 3;
-    private static final int STRIDE = (POSITION_COMPONENT_COUNT + COLOR_COMPONENT_COUNT) * BYTES_PER_FLOAT;
-
     private final Context context;
-    private final FloatBuffer vertexData;
+
     private final float[] projectionMatrix = new float[16];
     private final float[] modelMatrix = new float[16];
 
-    private int program;
-    private int aPositionLocation;
-    private int aColorLocation;
-    private int uMatrixLocation;
+    private Table table;
+    private Mallet mallet;
+
+    private TextureShaderProgram textureProgram;
+    private ColorShaderProgram colorProgram;
+
+    private int texture;
 
     public AirHockeyRenderer(Context context) {
         this.context = context;
-        float[] tableVerticesWithTriangles = {
-                // Order of coordinates: X, Y, R, G, B
-                // Triangle Fan
-                0f,      0f,    1f,     1f,     1f,
-                -0.5f,  -0.8f,  0.7f,   0.7f,   0.7f,
-                0.5f,   -0.8f,  0.7f,   0.7f,   0.7f,
-                0.5f,   0.8f,   0.7f,   0.7f,   0.7f,
-                -0.5f,  0.8f,   0.7f,   0.7f,   0.7f,
-                -0.5f,  -0.8f,  0.7f,   0.7f,   0.7f,
-                // Middle Line
-                -0.5f,  0f,     1f,     0f,     0f,
-                0.5f,   0f,     1f,     0f,     0f,
-                // Mallets
-                0f,     -0.4f,  0f,     0f,     1f,
-                0f,     0.4f,   1f,     0f,     0f,
-        };
-        vertexData = ByteBuffer
-                .allocateDirect(tableVerticesWithTriangles.length * BYTES_PER_FLOAT)
-                .order(ByteOrder.nativeOrder())
-                .asFloatBuffer();
-
-        vertexData.put(tableVerticesWithTriangles);
     }
 
     @Override
-    public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
-        glClearColor(0.0f, 0.0f,  0.0f, 0.0f);
-        String vertexShaderSource = TextResourceReader.readTextFileFromResourde(context, R.raw.simple_vertex_shader);
-        String fragmentShaderSource = TextResourceReader.readTextFileFromResourde(context, R.raw.simple_fragment_shader);
-        int vertexShader = ShaderHelper.compileVertexShader(vertexShaderSource);
-        int fragmentShader = ShaderHelper.compileFragmentShader(fragmentShaderSource);
-        program = ShaderHelper.linkProgram(vertexShader, fragmentShader);
-        if (LoggerConfig.ON) {
-            ShaderHelper.validateProgram(program);
-        }
-        glUseProgram(program);
-        aColorLocation = glGetAttribLocation(program, A_COLOR);
-        aPositionLocation = glGetAttribLocation(program, A_POSITION);
-        // Ensure OPEN_GL read data from very beginning
-        vertexData.position(0);
-        glVertexAttribPointer(aPositionLocation, POSITION_COMPONENT_COUNT, GL_FLOAT, false, STRIDE, vertexData);
-        glEnableVertexAttribArray(aPositionLocation);
+    public void onSurfaceCreated(GL10 glUnused, EGLConfig config) {
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
-        vertexData.position(POSITION_COMPONENT_COUNT);
-        glVertexAttribPointer(aColorLocation, COLOR_COMPONENT_COUNT, GL_FLOAT, false, STRIDE, vertexData);
-        glEnableVertexAttribArray(aColorLocation);
+        table = new Table();
+        mallet = new Mallet();
 
-        uMatrixLocation = glGetUniformLocation(program, U_MATRIX);
-        setIdentityM(modelMatrix, 0);
-        translateM(modelMatrix, 0, 0f, 0f, -2f);
-        rotateM(modelMatrix, 0, -60f, 1f, 0f,0f);
+        textureProgram = new TextureShaderProgram(context);
+        colorProgram = new ColorShaderProgram(context);
+
+        texture = TextureHelper.loadTexture(context, R.drawable.air_hockey_surface);
     }
 
     @Override
@@ -108,19 +71,20 @@ public class AirHockeyRenderer implements GLSurfaceView.Renderer{
     }
 
     @Override
-    public void onDrawFrame(GL10 gl10) {
+    public void onDrawFrame(GL10 glUnused) {
+        // Clear the rendering surface.
         glClear(GL_COLOR_BUFFER_BIT);
-        glUniformMatrix4fv(uMatrixLocation, 1, false, projectionMatrix, 0);
-        // Draw table
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 6);
 
-        // Draw dividing line
-        glDrawArrays(GL_LINES, 6, 2);
+        // Draw the table.
+        textureProgram.useProgram();
+        textureProgram.setUniforms(projectionMatrix, texture);
+        table.bindData(textureProgram);
+        table.draw();
 
-        // Draw First Mallets
-        glDrawArrays(GL_POINTS, 8, 1);
-
-        // Draw Second Mallets
-        glDrawArrays(GL_POINTS, 9, 1);
+        // Draw the mallets.
+        colorProgram.useProgram();;
+        colorProgram.setUniforms(projectionMatrix);
+        mallet.bindData(colorProgram);
+        mallet.draw();
     }
 }
