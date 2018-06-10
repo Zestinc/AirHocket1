@@ -24,11 +24,9 @@ import javax.microedition.khronos.opengles.GL10;
 
 import static android.opengl.GLES20.*;
 import static android.opengl.Matrix.multiplyMM;
-import static android.opengl.Matrix.orthoM;
 import static android.opengl.Matrix.rotateM;
 import static android.opengl.Matrix.setIdentityM;
 import static android.opengl.Matrix.translateM;
-import static com.example.zestinc.airhockey.Constants.BYTES_PER_FLOAT;
 
 public class AirHockeyRenderer implements GLSurfaceView.Renderer{
     private final Context context;
@@ -44,7 +42,7 @@ public class AirHockeyRenderer implements GLSurfaceView.Renderer{
 
     private int texture;
 
-    public AirHockeyRenderer(Context context) {
+    AirHockeyRenderer(Context context) {
         this.context = context;
     }
 
@@ -59,6 +57,10 @@ public class AirHockeyRenderer implements GLSurfaceView.Renderer{
         colorProgram = new ColorShaderProgram(context);
 
         texture = TextureHelper.loadTexture(context, R.drawable.air_hockey_surface);
+        
+        setIdentityM(modelMatrix, 0);
+        translateM(modelMatrix, 0, 0f, 0f, -2f);
+        rotateM(modelMatrix, 0, -60f, 1f, 0f,0f);
     }
 
     @Override

@@ -11,11 +11,11 @@ import static android.opengl.GLES20.*;
 public class ShaderHelper {
     private static final String TAG = ShaderHelper.class.getSimpleName();
 
-    public static int compileVertexShader(String shaderCode) {
+    private static int compileVertexShader(String shaderCode) {
         return compileShader(GL_VERTEX_SHADER, shaderCode);
     }
 
-    public static int compileFragmentShader(String shaderCode) {
+    private static int compileFragmentShader(String shaderCode) {
         return compileShader(GL_FRAGMENT_SHADER, shaderCode);
     }
 
@@ -51,7 +51,7 @@ public class ShaderHelper {
         return shaderObjectId;
     }
 
-    public static int linkProgram(int vertexShaderId, int fragmentShaderId) {
+    private static int linkProgram(int vertexShaderId, int fragmentShaderId) {
         final int programObjectId = glCreateProgram();
 
         if (programObjectId == 0) {

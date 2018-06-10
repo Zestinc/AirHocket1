@@ -13,14 +13,11 @@ import static android.opengl.GLES20.glGetUniformLocation;
 import static android.opengl.GLES20.glUniform1i;
 import static android.opengl.GLES20.glUniformMatrix4fv;
 
-/**
- * Created by zestinc on 6/10/18.
- */
+// Created by zestinc on 6/10/18.
 
 public class TextureShaderProgram extends ShaderProgram{
     // Uniform locations
     private final int uMatrixLocation;
-    // TODO What's this?
     private final int uTextureUnitLocation;
 
     // Attribute locations
