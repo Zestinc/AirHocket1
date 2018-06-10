@@ -4,6 +4,10 @@ import android.util.Log;
 
 import static android.opengl.GLES20.*;
 
+/**
+ * Created by zestinc on 4/18/18.
+ */
+
 public class ShaderHelper {
     private static final String TAG = ShaderHelper.class.getSimpleName();
 
