@@ -20,6 +20,7 @@ import javax.microedition.khronos.opengles.GL10;
 import static android.opengl.GLES20.*;
 import static android.opengl.Matrix.multiplyMM;
 import static android.opengl.Matrix.orthoM;
+import static android.opengl.Matrix.rotateM;
 import static android.opengl.Matrix.setIdentityM;
 import static android.opengl.Matrix.translateM;
 
@@ -94,6 +95,7 @@ public class AirHockeyRenderer implements GLSurfaceView.Renderer{
         uMatrixLocation = glGetUniformLocation(program, U_MATRIX);
         setIdentityM(modelMatrix, 0);
         translateM(modelMatrix, 0, 0f, 0f, -2f);
+        rotateM(modelMatrix, 0, -60f, 1f, 0f,0f);
     }
 
     @Override
