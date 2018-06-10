@@ -3,6 +3,7 @@ package com.example.zestinc.airhockey;
 import android.content.Context;
 import android.graphics.Shader;
 import android.opengl.GLSurfaceView;
+import android.util.Log;
 
 import com.example.zestinc.airhockey.util.LoggerConfig;
 import com.example.zestinc.airhockey.util.MatrixHelper;
@@ -93,22 +94,21 @@ public class AirHockeyRenderer implements GLSurfaceView.Renderer{
         uMatrixLocation = glGetUniformLocation(program, U_MATRIX);
         setIdentityM(modelMatrix, 0);
         translateM(modelMatrix, 0, 0f, 0f, -2f);
-
-        final float[] temp = new float[16];
-        multiplyMM(temp, 0, projectionMatrix, 0, modelMatrix, 0);
-        System.arraycopy(temp, 0, projectionMatrix, 0, temp.length);
     }
 
     @Override
     public void onSurfaceChanged(GL10 gl10, int width, int height) {
         glViewport(0, 0, width, height);
         MatrixHelper.perspectiveM(projectionMatrix, 45, (float)width/(float)height, 1f, 10f);
+        final float[] temp = new float[16];
+        multiplyMM(temp, 0, projectionMatrix, 0, modelMatrix, 0);
+        System.arraycopy(temp, 0, projectionMatrix, 0, temp.length);
     }
 
     @Override
     public void onDrawFrame(GL10 gl10) {
         glClear(GL_COLOR_BUFFER_BIT);
-//        glUniformMatrix4fv(uMatrixLocation, 1, false, projectionMatrix, 0);
+        glUniformMatrix4fv(uMatrixLocation, 1, false, projectionMatrix, 0);
         // Draw table
         glDrawArrays(GL_TRIANGLE_FAN, 0, 6);
 
